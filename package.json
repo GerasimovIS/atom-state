@@ -1,0 +1,14 @@
+{
+  "name": "atom-state",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "igerasimov <igerasimov@technotimes.org>",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "vue": "^3.2.37"
+  }
+}
