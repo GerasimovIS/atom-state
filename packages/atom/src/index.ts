@@ -1,4 +1,4 @@
 export * from './atom'
 export * from './derive'
-export * from './action'
+export * from './event'
 export * from './effect'

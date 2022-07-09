@@ -1,6 +1,6 @@
 import { emitter } from './event-emitter'
 import { getUid } from './uid'
-import { Action } from './action'
+import { Event, event } from './event'
 
 export type Atom <T> = {
   key: string;
@@ -9,34 +9,40 @@ export type Atom <T> = {
   addDep (dep: Atom<T>): void;
   deps: Set<Atom<any>>;
   watch (fn: (value: T) => void): Function;
-  on (action: Action, reduceFn: (prevState: T, payload?: any) => T): Function;
+  on (event: Event, reduceFn: (prevState: T, payload?: any) => T): Function;
+  updateEvent: Event;
 }
 
-// @ts-ignore
-window.atom = atom
-export function atom <T> (initialState: T): Atom<T> {
+export function atom <T> (initialState: T): Readonly<Atom<T>> {
   let state = initialState
   const key = `atom-${getUid()}`
   const deps = new Set<Atom<any>>()
+  const updateEvent = event()
 
-  return {
+  const atomInstance = {
     key,
+    deps,
+    updateEvent,
     get () {
       return state
     },
     set (reduceFn: (prevState: T, payload?: any) => T) {
       state = reduceFn(state)
-      emitter.emit(key, state)
+      updateEvent(state)
     },
     addDep (dep: Atom<T>) {
       deps.add(dep)
     },
     watch (watchFn: (value: T) => void) {
-      return emitter.on(key, watchFn)
+      return emitter.on(updateEvent.key, watchFn)
     },
-    on (action: Action, reduceFn: (prevState: T, payload?: any) => T) {
-      return emitter.on(action.key, (payload: any) => this.set(() => reduceFn(state, payload)))
-    },
-    deps
+    on (event: Event, reduceFn: (prevState: T, payload?: any) => T) {
+      return emitter.on(
+        event.key,
+        (payload: any) => this.set(() => reduceFn(state, payload))
+      )
+    }
   }
+
+  return Object.freeze(atomInstance)
 }

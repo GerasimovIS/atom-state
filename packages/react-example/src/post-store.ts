@@ -9,4 +9,4 @@ export const post = atom(null)
 export const isPostLoading  = atom(false)
 
 post.on(fetchPostEffect.dataDone, (_, post) => post)
-isPostLoading.on(fetchPostEffect.runningAction, (_, isLoading) => isLoading)
+isPostLoading.on(fetchPostEffect.running, (_, isLoading) => isLoading)

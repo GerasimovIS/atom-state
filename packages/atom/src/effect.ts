@@ -1,24 +1,27 @@
-import { action } from './action'
+import { event } from './event'
 
 export function effect (effectFn: Function) {
-  const dataDone = action()
-  const runningAction = action()
-  const doneAction = action()
-  const failedAction = action()
+  const dataDone = event()
+  const running = event()
+  const done = event()
+  const failed = event()
 
   async function execute (...args: any[]) {
     try {
-      runningAction(true)
+      running(true)
       const data = await effectFn(...args)
       dataDone(data)
     } catch (e) {
-      failedAction()
+      failed(e)
       throw e
     } finally {
-      doneAction()
-      runningAction(false)
+      done()
+      running(false)
     }
   }
 
-  return Object.assign(execute, { dataDone, runningAction, doneAction, failedAction })
+  return Object.assign(
+    execute,
+    { dataDone, running, done, failed }
+  )
 }
