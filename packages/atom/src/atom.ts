@@ -9,12 +9,14 @@ export type Atom <T> = {
   addDep (dep: Atom<T>): void;
   deps: Set<Atom<any>>;
   watch (fn: (value: T) => void): Function;
-  on (event: Event, reduceFn: (prevState: T, payload?: any) => T): Function;
+  on (event: Event, reduceFn: (prevState: T, payload?: any) => T): Atom<T>;
+  reset (...events: Event[]): Atom<T>;
   updateEvent: Event;
 }
 
-export function atom <T> (initialState: T): Readonly<Atom<T>> {
+export function atom <T> (initialState: T): Atom<T> {
   let state = initialState
+  const resetState = initialState
   const key = `atom-${getUid()}`
   const deps = new Set<Atom<any>>()
   const updateEvent = event()
@@ -37,12 +39,24 @@ export function atom <T> (initialState: T): Readonly<Atom<T>> {
       return emitter.on(updateEvent.key, watchFn)
     },
     on (event: Event, reduceFn: (prevState: T, payload?: any) => T) {
-      return emitter.on(
+      emitter.on(
         event.key,
-        (payload: any) => this.set(() => reduceFn(state, payload))
+        (payload: any) => atomInstance.set(() => reduceFn(state, payload))
       )
+
+      return atomInstance
+    },
+    reset (...events: Event[]) {
+      for (const event of events) {
+        emitter.on(
+          event.key,
+          () => atomInstance.set(() => resetState)
+        )
+      }
+
+      return atomInstance
     }
   }
 
-  return Object.freeze(atomInstance)
+  return atomInstance
 }
